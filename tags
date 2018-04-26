@@ -1,0 +1,28 @@
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+blerh	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^        blerh =  df_hist['Course Name'][curr_stud_row + sec_row_cnt].strip()[-2:]$/;"	v	language:Python
+c	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^c = df_hist['Course Name'][curr_stud_row + sec_row_cnt]$/;"	v	language:Python
+curr_stud_row	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^    curr_stud_row = TEMPL_START_ROW + row_cnt - 1$/;"	v	language:Python
+curr_termid	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^        curr_termid =  df_transcript['Calendar Year'][row_cnt] - START_OF_CAL $/;"	v	language:Python
+df_courses	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^df_courses = stud_xl.parse('Master Course List')$/;"	v	language:Python
+df_grades	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^df_grades = stud_xl.parse('Grade Table')$/;"	v	language:Python
+df_hist	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^        df_hist = df_hist.append(s2, ignore_index = True)$/;"	v	language:Python
+df_hist	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^df_hist = hist_xl.parse("Historical Grades")$/;"	v	language:Python
+df_transcript	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^df_transcript = stud_xl.parse('Student Transcript')$/;"	v	language:Python
+DoAnotherRow	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^            DoAnotherRow = False$/;"	v	language:Python
+DoAnotherRow	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^            DoAnotherRow = True$/;"	v	language:Python
+DoAnotherRow	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^    DoAnotherRow = True # This will get set to False if no other row needed.$/;"	v	language:Python
+ExcelWriter	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^from pandas import ExcelWriter$/;"	i	language:Python
+hist_xl	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^hist_xl = pd.ExcelFile("Import.xls")$/;"	v	language:Python
+let_to_GPA	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^let_to_GPA = {}$/;"	v	language:Python
+let_to_pcnt	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^let_to_pcnt = {'A+': 100, 'A':97, 'A-':93, 'B+':90, 'B':87, 'B-':83, 'C+':80, 'C':77, 'C-':73, 'D+':70, 'D':67, 'D-':65, 'F':0, }$/;"	v	language:Python
+math	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^import math$/;"	i	language:Python
+Nan	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^from numpy import nan as Nan$/;"	i	language:Python
+np	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^import numpy as np$/;"	i	language:Python
+pd	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^import pandas as pd$/;"	i	language:Python
+s2	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^        s2 = pd.Series([Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan])$/;"	v	language:Python
+sec_row_cnt	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^            sec_row_cnt = 1$/;"	v	language:Python
+sec_row_cnt	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^    sec_row_cnt = 0   # This is used for doubling up on rows when on $/;"	v	language:Python
+START_OF_CAL	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^START_OF_CAL = 1982$/;"	v	language:Python
+stud_xl	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^stud_xl = pd.ExcelFile("mycsv.xlsx")$/;"	v	language:Python
+TEMPL_START_ROW	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^TEMPL_START_ROW = 6$/;"	v	language:Python
+writer	/Users/Jimini/Library/Mobile Documents/com~apple~CloudDocs/3. Personal/3. Projects/Python/studentDBImport/grade.py	/^writer = ExcelWriter('NewFile.xlsx')$/;"	v	language:Python

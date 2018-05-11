@@ -6,7 +6,17 @@ from numpy import nan as Nan
 import math
 import xlrd
 import sys
+import time
 
+timing = []
+t0 = []
+t1 = []
+t2 = []
+t3 = []
+t4 = []
+t5 = []
+
+BIG_TIME = time.time()
 
 def saveHist():
     writer = ExcelWriter('NewFile.xlsx')
@@ -63,15 +73,26 @@ let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, '
 # Incremented each time there is a double row student (e.g. for HL)
 extra_row_cnt = 0
 
-# Loop through rows, creating each as we go
-for row_cnt in range(0, 60):
 
+act_row_cnt = 0
+curr_stud_row = TEMPL_START_ROW - 1
+
+# Loop through rows, creating each as we go
+for row_cnt in range(0, 165):
+
+    act_row_cnt += 1
+    
     # Don't bother with anything if there is are no grades for the student.  Go to the
     # next row.
-    if pd.isnull(df_transcript['RC Column 4'][row_cnt]) == False or \
-        pd.isnull(df_transcript['RC Column 8'][row_cnt]) == False:
+    if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False or \
+        pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
         
-        curr_stud_row = TEMPL_START_ROW + row_cnt - 1
+        ## Start Timer
+        tmr = time.time()
+       
+        curr_stud_row += extra_row_cnt + act_row_cnt + TEMPL_START_ROW + 1
+        #if extra_row_cnt:
+            #1extra_row_cnt = 0
 
         #sec_row_cnt = 0   # This is used for doubling up on rows when on 
         #DoAnotherRow = True # This will get set to False if no other row needed.
@@ -83,45 +104,64 @@ for row_cnt in range(0, 60):
         s2 = pd.Series([Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan,Nan])
         df_hist = df_hist.append(s2, ignore_index = True)
         
+        # Write to a new Excel file
+        saveHist()
+        
+        # Testing - Writing to disk - REMOVE LATER
         # Add Student Number
-        df_hist['Student_Number'][curr_stud_row ] = df_transcript['Unique ID'][row_cnt]
+        df_hist['Student_Number'][curr_stud_row ] = df_transcript['Unique ID'][act_row_cnt]
 
-        # Add Course Name
-        df_hist['Course Name'][curr_stud_row] = df_transcript['Course Name'][row_cnt]
-        #df_hist['Course Name'][curr_stud_row].strip()[-2:]
+        # Write to a new Excel file
+        saveHist()
         
         # Add Course Number
-        df_hist['Course Number'][curr_stud_row] = df_transcript['Course Number'][row_cnt]
+        df_hist['Course Number'][curr_stud_row] = df_transcript['Course Number'][act_row_cnt]
+        # REMOVE LATER
+        crs_num = df_hist['Course Number'][curr_stud_row]
+        # REMOVE LATER
 
+        # Add Course Name
+        #df_hist['Course Name'][curr_stud_row] = df_transcript['Course Name'][act_row_cnt]
+        df_hist['Course Name'][curr_stud_row] = str(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['Description'])
+        #df_hist['Course Name'][curr_stud_row].strip()[-2:]
+        
         # Termid - Year of work - start of PowerSchool time * 1000
-        cal_year = int(df_transcript['Calendar Year'][row_cnt])
+        cal_year = int(df_transcript['Calendar Year'][act_row_cnt])
         curr_termid = (cal_year - START_OF_CAL) * 100
         df_hist['Termid'][curr_stud_row] = str(curr_termid)
 
+        # End timer and add to others
+        tmr = time.time() - tmr
+        t0.append(tmr)
+        print("t0 = {}".format(tmr))
+        
+        ## Start Timer
+        tmr = time.time()
+        
         # SchoolName - GEMS American Academy
         df_hist['SchoolName'][curr_stud_row] =  'GEMS American Academy'
 
         # Grade_Level - 10
-        df_hist['Grade_Level'][curr_stud_row] = df_transcript['Grade Level'][row_cnt]
+        df_hist['Grade_Level'][curr_stud_row] = df_transcript['Grade Level'][act_row_cnt]
 
 
         # Credit Type - Units, or MA
-        df_hist['Credit Type'][curr_stud_row] = 'Units' #df_transcript['Grade Level'][row_cnt]
+        df_hist['Credit Type'][curr_stud_row] = 'Units' #df_transcript['Grade Level'][act_row_cnt]
 
         # Teacher Name - Mary Smith
-        df_hist['Teacher Name'][curr_stud_row] = df_transcript['Staff Name'][row_cnt]
+        df_hist['Teacher Name'][curr_stud_row] = df_transcript['Staff Name'][act_row_cnt]
 
         # Schoolid
-        df_hist['Schoolid'][curr_stud_row] =  SCHOOL_ID #df_transcript['Course Number'][row_cnt]
+        df_hist['Schoolid'][curr_stud_row] =  SCHOOL_ID #df_transcript['Course Number'][act_row_cnt]
 
         # ExcludeFromGPA - 1 or 0
-        df_hist['ExcludeFromGPA'][curr_stud_row] = 0 #df_transcript['Course Number'][row_cnt]
+        df_hist['ExcludeFromGPA'][curr_stud_row] = 0 #df_transcript['Course Number'][act_row_cnt]
         
         # ExcludeFromClassRank - 1 or 0
-        df_hist['ExcludeFromClassRank'][curr_stud_row] = 0 #df_transcript['Course Number'][row_cnt]
+        df_hist['ExcludeFromClassRank'][curr_stud_row] = 0 #df_transcript['Course Number'][act_row_cnt]
         
         # ExcludeFromHonorRoll - 1 or 0
-        df_hist['ExcludeFromHonorRoll'][curr_stud_row] = 0 #df_transcript['Course Number'][row_cnt]
+        df_hist['ExcludeFromHonorRoll'][curr_stud_row] = 0 #df_transcript['Course Number'][act_row_cnt]
 
         # Need to check for courses that need two rows.  If this does, set 
         # Second Row Counter to 2 else
@@ -131,6 +171,14 @@ for row_cnt in range(0, 60):
         # Write to a new Excel file
         saveHist()
         # Testing - Writing to disk - REMOVE LATER
+        
+        # End timer and add to others
+        tmr = time.time() - tmr
+        t1.append(tmr)
+        print("t1 = {}".format(tmr))
+        
+        ## Start Timer
+        tmr = time.time()
 
 ##### END MAIN SECTION #####
 ##### START LOGIC SECTION #####
@@ -143,16 +191,24 @@ for row_cnt in range(0, 60):
 
 
         # Are there going to be 2 rows?  This occurs if there are two grades.
-        if pd.isnull(df_transcript['RC Column 4'][row_cnt]) == False and \
-           pd.isnull(df_transcript['RC Column 8'][row_cnt]) == False:
+        print("col 4 = {}".format(df_transcript['RC Column 4'][act_row_cnt])) 
+        print("col 8 = {}".format(df_transcript['RC Column 8'][act_row_cnt])) 
+        if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False and \
+           pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
                 TWO_ROWS = True
+        else:
+                TWO_ROWS = False
+
+        #### Output this stuff
 
 
         # Do we start on the first or second grade?
-        if pd.isnull(df_transcript['RC Column 4'][row_cnt]) == False:
+        if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False:
             SEC_ROW = False
-        elif pd.isnull(df_transcript['RC Column 8'][row_cnt]) == False:
+        elif pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
             SEC_ROW = True
+
+
 
         # Do we need an extra row?  If so, duplicate the current one.
         if TWO_ROWS == True:
@@ -165,6 +221,12 @@ for row_cnt in range(0, 60):
         saveHist()
         # Testing - Writing to disk - REMOVE LATER
         
+        # End timer and add to others
+        tmr = time.time() - tmr
+        t2.append(tmr)
+        print("t2 = ".format(tmr))
+        
+
 ##### END LOGIC SECTION #####
 ##### START EXTRA SECTION #####
 
@@ -176,6 +238,9 @@ for row_cnt in range(0, 60):
         complete = False
 
         while(complete == False):
+
+            ## Start Timer
+            tmr = time.time()
        
             # Duplicate previous if this is the first of two rows
             if TWO_ROWS == True and SEC_ROW == False:
@@ -193,11 +258,11 @@ for row_cnt in range(0, 60):
             # If this is the first row, use column 4 grade, otherwise use column 8
             # Also need to ensure not NaN
             if SEC_ROW == False:
-                if pd.isnull(df_transcript['RC Column 4'][row_cnt]) == False:
-                    df_hist['Grade'][curr_stud_row + SEC_ROW] = str(df_transcript['RC Column 4'][row_cnt]).strip()
+                if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False:
+                    df_hist['Grade'][curr_stud_row + SEC_ROW] = str(df_transcript['RC Column 4'][act_row_cnt]).strip()
             else: 
-                if pd.isnull(df_transcript['RC Column 8'][row_cnt]) == False:
-                    df_hist['Grade'][curr_stud_row + SEC_ROW] = str(df_transcript['RC Column 8'][row_cnt]).strip()
+                if pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
+                    df_hist['Grade'][curr_stud_row + SEC_ROW] = str(df_transcript['RC Column 8'][act_row_cnt]).strip()
 
             
             # Write to a new Excel file
@@ -215,6 +280,14 @@ for row_cnt in range(0, 60):
             # Write to a new Excel file
             saveHist()
             # Testing - Writing to disk - REMOVE LATER
+            
+            # End timer and add to others
+            tmr = time.time() - tmr
+            t3.append(tmr)
+            print("t3 = {}".format(tmr))
+            
+            ## Start Timer
+            tmr = time.time()
 
             # PotentialCrHrs - 0.5, 1 TODO: Is this logic correct - double check for HL students with only one semester
             # To find the potential credit, need to find the relevant row in the master course list (where the name
@@ -223,7 +296,12 @@ for row_cnt in range(0, 60):
             # This gives errors if > course with the same name e.g. SocDP1ToK 
             # So, first find row in df_courses where the course name is the same as this one.
 
-            course_crdts = int(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS'])
+            print("courses Course Number = {}".format(df_courses.loc[df_courses['Course Number']]))
+            print("hist Course Number = {}".format(df_hist['Course Number'][curr_stud_row]))
+            print("The row = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]]))
+            print("The value = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS']))
+
+            course_crdts = float(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS'])
             course_length = str(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['Length'])
 
             if str(course_length) == str('SEM'): #LENGTH_SEM:
@@ -248,7 +326,7 @@ for row_cnt in range(0, 60):
             # EarnedCrHrs - 0.5, 1 TODO: Problems with GPA again
             if pd.isnull(df_hist['Grade'][curr_stud_row + SEC_ROW]) == False and df_hist['Grade'][curr_stud_row + SEC_ROW] != 'F':
                 df_hist['EarnedCrHrs'][curr_stud_row + SEC_ROW] = df_hist['PotentialCrHrs'][curr_stud_row + SEC_ROW]
-                    #df_courses.loc[df_courses['Name'] == df_transcript['Course Name'][row_cnt], 'CRDTS'].iloc[0]
+                    #df_courses.loc[df_courses['Name'] == df_transcript['Course Name'][act_row_cnt], 'CRDTS'].iloc[0]
 
 
             # GPA Points - 4 
@@ -282,15 +360,21 @@ for row_cnt in range(0, 60):
                     SEC_ROW = True
 
             # Write to a new Excel file
-            saveHist()
+            #saveHist()
             # Testing - Writing to disk - REMOVE LATER
 
+            
+            # End timer and add to others
+            tmr = time.time() - tmr
+            t4.append(tmr)
+            print("t4 = {}".format(tmr))
+            
 ##### END EXTRA SECTION #####
  
     #TODO: Check this logic is correct...
     # Check if a student needs a second row.  This would occur if a student is a IB Diploma Higher Level and
     # there is a grade in the second column (and this loop isn't already looking at the second column)
-    #if sec_row_cnt == 0 and isHL and pd.isnull(df_transcript['RC Column 4'][row_cnt]) == False:
+    #if sec_row_cnt == 0 and isHL and pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False:
         #DoAnotherRow = True
         #sec_row_cnt = 1
     #else:
@@ -305,5 +389,28 @@ writer = ExcelWriter('NewFile.xlsx')
 df_hist.to_excel(writer,'Sheet1',index=False)
 writer.save()
 
+print("t0t0t0t0t0t0t0t00t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t")
+print('t0 = ')
+print(t0)
+print('t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1tt1t1t1t1tt1t1t1t1tt1t1t1t1tt1t1t1t1t1')
+print('t1 = ')
+print(t1)
+print('t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2')
+print('t2 = ')
+print(t2)
+print("t3t3t3t3t3t3t3t3t3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3t3")
+print('t3 = ')
+print(t3)
+print('t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4')
+print('t4 = ')
+print(t4)
 
 
+print("Average t0 = {}".format(sum(t0)/len(t0)))
+print("Average t1 = {}".format(sum(t1)/len(t1)))
+print("Average t2 = {}".format(sum(t2)/len(t2)))
+print("Average t3 = {}".format(sum(t3)/len(t3)))
+print("Average t4 = {}".format(sum(t4)/len(t4)))
+
+
+print("Total time = {}".format(time.time() - BIG_TIME))

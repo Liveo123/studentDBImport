@@ -1,3 +1,4 @@
+#import pudb; pu.db
 import pandas as pd
 
 import numpy as np
@@ -27,7 +28,7 @@ def saveHist():
 START_OF_CAL = 1990
 
 # The first row in the Historical Grade in the template sheet to add stuff
-TEMPL_START_ROW = 6
+TEMPL_START_ROW = 5
 
 # ID of High School
 SCHOOL_ID = 3
@@ -53,6 +54,7 @@ stud_xl = pd.ExcelFile("mycsv23.xlsx")
 df_courses = stud_xl.parse('Master Course List')
 df_transcript = stud_xl.parse('Student Transcript')
 df_grades = stud_xl.parse('Grade Table')
+df_student = stud_xl.parse('Student') 
 
 # Load up the Template worksheet - Historical Grades
 hist_xl = pd.ExcelFile("Import.xlsx")
@@ -68,30 +70,32 @@ for index, row in df_grades.iterrows():
 # TODO: What grade for P?
 let_to_pcnt = {'A+': 100, 'A':96, 'A-':93, 'B+':89, 'B':86, 'B-':83, 'C+':79, 'C':75, 'C-':70, 'D+':65, 'D':60, 'D-':55, 'F':49, 'P':0}
 
+# TODO: What grade for P?
 # Create a Letter to GPA dictionary
-let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, 'C+':2.30, 'C':2.00, 'C-':1.70, 'D+':1.30, 'D':1.00, 'D-':0.70, 'F':0.00, }
+let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, 'C+':2.30, 'C':2.00, 'C-':1.70, 'D+':1.30, 'D':1.00, 'D-':0.70, 'F':0.00, 'P':0}
 
 # Incremented each time there is a double row student (e.g. for HL)
 extra_row_cnt = 0
 
 
-act_row_cnt = 0
-curr_stud_row = TEMPL_START_ROW - 1
+act_row_cnt = -1
+curr_stud_row = TEMPL_START_ROW
 
 # Loop through rows, creating each as we go
-for row_cnt in range(0, 61):
+for row_cnt in range(0, 55):
 
     act_row_cnt += 1
     
     # Don't bother with anything if there is are no grades for the student.  Go to the
     # next row.
+    tmpc4 = df_transcript['RC Column 4'][act_row_cnt]
     if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False:    #or \
         #pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
         
         ## Start Timer
         tmr = time.time()
        
-        curr_stud_row = act_row_cnt + TEMPL_START_ROW + 1
+        curr_stud_row = act_row_cnt + TEMPL_START_ROW
         #if extra_row_cnt:
             #1extra_row_cnt = 0
 
@@ -116,14 +120,16 @@ for row_cnt in range(0, 61):
         ##saveHist()
         
         # Add Course Number
-        df_hist['Course Number'][curr_stud_row] = df_transcript['Course Number'][act_row_cnt]
+        crs_number_temp = df_transcript['Unique ID'][act_row_cnt]
+        mycnt = len(df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]])
+        df_hist['Course Number'][curr_stud_row] = df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]].iloc[0]['Bluebook ID']
         # REMOVE LATER
         crs_num = df_hist['Course Number'][curr_stud_row]
         # REMOVE LATER
 
         # Add Course Name
-        #df_hist['Course Name'][curr_stud_row] = df_transcript['Course Name'][act_row_cnt]
-        df_hist['Course Name'][curr_stud_row] = str(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['Description'])
+        tempCN = df_transcript['Course Name'][act_row_cnt]
+        df_hist['Course Name'][curr_stud_row] = str(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][act_row_cnt]].iloc[0]['Description'])
         #df_hist['Course Name'][curr_stud_row].strip()[-2:]
         
         # Termid - Year of work - start of PowerSchool time * 1000
@@ -170,7 +176,8 @@ for row_cnt in range(0, 61):
         # Testing - Writing to disk - REMOVE LATER
 
         # Write to a new Excel file
-        #saveHist()
+        #print(df_hist)
+        saveHist()
         # Testing - Writing to disk - REMOVE LATER
         
         # End timer and add to others
@@ -296,13 +303,13 @@ for row_cnt in range(0, 61):
         # This gives errors if > course with the same name e.g. SocDP1ToK 
         # So, first find row in df_courses where the course name is the same as this one.
 
-        print("courses Course Number = {}".format(df_courses.loc[df_courses['Course Number']]))
-        print("hist Course Number = {}".format(df_hist['Course Number'][curr_stud_row]))
-        print("The row = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]]))
-        print("The value = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS']))
+        ##print("courses Course Number = {}".format(df_courses.loc[df_courses['Course Number']]))
+        #print("hist Course Number = {}".format(df_hist['Course Number'][curr_stud_row]))
+        #print("The row = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]]))
+        #print("The value = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS']))
 
-        course_crdts = float(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS'])
-        course_length = str(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['Length'])
+        course_crdts = float(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][curr_stud_row]].iloc[0]['CRDTS'])
+        course_length = str(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][curr_stud_row]].iloc[0]['Length'])
 
         if str(course_length) == str('SEM'): #LENGTH_SEM:
             df_hist['PotentialCrHrs'][curr_stud_row] = course_crdts
@@ -339,16 +346,16 @@ for row_cnt in range(0, 61):
         # Do we need to worry about old courses that end in !? 
 
         gpa_temp = 0.0
-        #if str(df_hist['Course Name'][curr_stud_row])[-2:] == HIGHER_LEVEL:
-            #gpa_temp = 0.5
-        #elif str(df_hist['Course Name'][curr_stud_row])[-2:] == STANDARD_LEVEL:
-            #gpa_temp = 0.25
-        #else:
-            #gpa_temp = 0.0
+        if str(df_hist['Course Name'][curr_stud_row])[-2:] == HIGHER_LEVEL:
+            gpa_temp = 0.5
+        elif str(df_hist['Course Name'][curr_stud_row])[-2:] == STANDARD_LEVEL:
+            gpa_temp = 0.25
+        else:
+            gpa_temp = 0.0
 
         # Use the grade the student received to find the points from the grade table and 
         # then add them to the earned grade
-        #gpa_temp += let_to_gpa[df_hist['Grade'][curr_stud_row]]
+        gpa_temp += let_to_gpa[df_hist['Grade'][curr_stud_row]]
         df_hist['GPA Points'][curr_stud_row] = gpa_temp
         # Do we need to loop again?
         if (SEC_ROW == True) or (SEC_ROW == False and TWO_ROWS == False):
@@ -387,25 +394,9 @@ for row_cnt in range(0, 61):
 c = df_hist['Course Name'][curr_stud_row]
 
 # Write to a new Excel file
-writer = ExcelWriter('NewFile.xlsx')
+writer = ExcelWriter('NewFile4.xlsx')
 df_hist.to_excel(writer,'Sheet1',index=False)
 writer.save()
-
-print("t0t0t0t0t0t0t0t00t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t0t")
-print('t0 = ')
-print(t0)
-print('t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1t1tt1t1t1t1tt1t1t1t1tt1t1t1t1tt1t1t1t1t1')
-print('t1 = ')
-print(t1)
-print('t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2t2')
-print('t2 = ')
-print(t2)
-print("t3t3t3t3t3t3t3t3t3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3tt3t3t3t3t3t3t3")
-print('t3 = ')
-print(t3)
-print('t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4t4')
-print('t4 = ')
-print(t4)
 
 
 print("Average t0 = {}".format(sum(t0)/len(t0)))

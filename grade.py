@@ -1,4 +1,3 @@
-#import pudb; pu.db
 import pandas as pd
 
 import numpy as np
@@ -8,6 +7,7 @@ import math
 import xlrd
 import sys
 import time
+import datetime
 
 timing = []
 t0 = []
@@ -77,6 +77,10 @@ let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, '
 # Incremented each time there is a double row student (e.g. for HL)
 extra_row_cnt = 0
 
+# Need a count similar to act_row_cnt, but that gets incremented when a new row 
+# gets created in the new file/dataframe
+newfile_row_cnt = -1
+
 
 act_row_cnt = -1
 curr_stud_row = TEMPL_START_ROW
@@ -88,14 +92,19 @@ for row_cnt in range(0, 55):
     
     # Don't bother with anything if there is are no grades for the student.  Go to the
     # next row.
-    tmpc4 = df_transcript['RC Column 4'][act_row_cnt]
+    acn = df_transcript['Course Name'][act_row_cnt]
+    ac4 = df_transcript['RC Column 4'][act_row_cnt]
     if pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False:    #or \
         #pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False:
-        
+       
+        # Increment no. of rows in new file / Dataframe
+        newfile_row_cnt += 1
+
+
         ## Start Timer
         tmr = time.time()
        
-        curr_stud_row = act_row_cnt + TEMPL_START_ROW
+        curr_stud_row = newfile_row_cnt + TEMPL_START_ROW
         #if extra_row_cnt:
             #1extra_row_cnt = 0
 
@@ -120,7 +129,7 @@ for row_cnt in range(0, 55):
         ##saveHist()
         
         # Add Course Number
-        crs_number_temp = df_transcript['Unique ID'][act_row_cnt]
+        crs_number_temp = df_transcript['Course Number'][act_row_cnt]
         mycnt = len(df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]])
         df_hist['Course Number'][curr_stud_row] = df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]].iloc[0]['Bluebook ID']
         # REMOVE LATER
@@ -136,8 +145,7 @@ for row_cnt in range(0, 55):
         cal_year = int(df_transcript['Calendar Year'][act_row_cnt])
         curr_termid = (cal_year - START_OF_CAL) * 100
         df_hist['Termid'][curr_stud_row] = str(curr_termid)
-
-        # End timer and add to others
+# End timer and add to others
         tmr = time.time() - tmr
         t0.append(tmr)
         print("t0 = {}".format(tmr))
@@ -148,12 +156,23 @@ for row_cnt in range(0, 55):
         # SchoolName - GEMS American Academy
         df_hist['SchoolName'][curr_stud_row] =  'GEMS American Academy'
 
+        print(df_hist.ix[5])
+       
+        # TODO: grade level = grade level - (current year - caledndar year of course)
         # Grade_Level - 10
-        df_hist['Grade_Level'][curr_stud_row] = df_transcript['Grade Level'][act_row_cnt]
+        print ("cal_year = {}".format(cal_year))
+        print ("type cal_year = {}".format(type(cal_year)))
+        grade_lvl = df_transcript['Grade Level'][act_row_cnt]
+        # Remove G on grade level if one has been added.
+        if grade_lvl[0] == 'G':
+            grade_lvl = grade_lvl[1:]
+        df_hist['Grade_Level'][curr_stud_row] = int(grade_lvl) \
+                                                - int(datetime.datetime.now().year) \
+                                                - cal_year
 
-
+        #NOT NEEDED BY NEW SYSTEM
         # Credit Type - Units, or MA
-        df_hist['Credit Type'][curr_stud_row] = 'Units' #df_transcript['Grade Level'][act_row_cnt]
+        #df_hist['Credit Type'][curr_stud_row] = 'Units' #df_transcript['Grade Level'][act_row_cnt]
 
         # Teacher Name - Mary Smith
         df_hist['Teacher Name'][curr_stud_row] = df_transcript['Staff Name'][act_row_cnt]
@@ -308,8 +327,9 @@ for row_cnt in range(0, 55):
         #print("The row = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]]))
         #print("The value = {}".format(df_courses.loc[df_courses['Course Number'] == df_hist['Course Number'][curr_stud_row]].iloc[0]['CRDTS']))
 
-        course_crdts = float(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][curr_stud_row]].iloc[0]['CRDTS'])
-        course_length = str(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][curr_stud_row]].iloc[0]['Length'])
+        aaccn = df_transcript['Course Number'][act_row_cnt]
+        course_crdts = float(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][act_row_cnt]].iloc[0]['CRDTS'])
+        course_length = str(df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][act_row_cnt]].iloc[0]['Length'])
 
         if str(course_length) == str('SEM'): #LENGTH_SEM:
             df_hist['PotentialCrHrs'][curr_stud_row] = course_crdts
@@ -369,7 +389,7 @@ for row_cnt in range(0, 55):
                 SEC_ROW = True
 
         # Write to a new Excel file
-        ##saveHist()
+        saveHist()
         # Testing - Writing to disk - REMOVE LATER
 
         
@@ -377,7 +397,8 @@ for row_cnt in range(0, 55):
         tmr = time.time() - tmr
         t4.append(tmr)
         print("t4 = {}".format(tmr))
-            
+        crs_num = df_transcript.iloc[act_row_cnt]['Course Number']
+        print("This is the row: {}".format(df_hist.ix[curr_stud_row]))
 ##### END EXTRA SECTION #####
  
     # Check this logic is correct...

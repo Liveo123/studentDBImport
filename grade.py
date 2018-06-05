@@ -164,11 +164,12 @@ for row_cnt in range(0, 55):
         print ("type cal_year = {}".format(type(cal_year)))
         grade_lvl = df_transcript['Grade Level'][act_row_cnt]
         # Remove G on grade level if one has been added.
-        if grade_lvl[0] == 'G':
-            grade_lvl = grade_lvl[1:]
-        df_hist['Grade_Level'][curr_stud_row] = int(grade_lvl) \
-                                                - int(datetime.datetime.now().year) \
-                                                - cal_year
+        #if grade_lvl[0] == 'G':
+        #    grade_lvl = grade_lvl[1:]
+        df_hist['Grade_Level'][curr_stud_row] = int(grade_lvl) - int(df_transcript['Relative Year'][act_row_cnt])
+        #df_hist['Grade_Level'][curr_stud_row] = int(grade_lvl) \
+                                                #+ int(datetime.datetime.now().year) \
+                                                #- cal_year
 
         #NOT NEEDED BY NEW SYSTEM
         # Credit Type - Units, or MA

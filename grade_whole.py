@@ -71,15 +71,30 @@ for index, row in df_grades.iterrows():
 
 # Create a letter to percent dictionary
 # TODO: What grade for P?
-let_to_pcnt = {'A+': 100, 'A':96, 'A-':93, 'B+':89, 'B':86, 'B-':83, 'C+':79, 'C':75, 'C-':70, 'D+':65, 'D':60, 'D-':55, 'F':49, 'P':0}
+let_to_pcnt = {'A+': 100, 'A':96, 'A-':93, 'B+':89, 'B':86, 'B-':83, 'C+':79, 'C':75, 'C-':70, 'D+':65, 'D':60, 'D-':55, 'F':49, 'P':0 ,'N':0}
 
 # TODO: What grade for P?
 # Create a Letter to GPA dictionary
-let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, 'C+':2.30, 'C':2.00, 'C-':1.70, 'D+':1.30, 'D':1.00, 'D-':0.70, 'F':0.00, 'P':0}
+let_to_gpa = {'A+': 4.30, 'A':4.00, 'A-':3.70, 'B+':3.30, 'B':3.00, 'B-':2.70, 'C+':2.30, 'C':2.00, 'C-':1.70, 'D+':1.30, 'D':1.00, 'D-':0.70, 'F':0.00, 'P':0, 'N':0}
 
 # Incremented each time there is a double row student (e.g. for HL)
 #extra_row_cnt = 0
 
+# Check that are only letters in grade column
+#ord0 = ord('0')
+#ord9 = ord('9')
+#
+#for index, row in df_transcript.iterrows():
+    #if (ord(row['RC Column 4'])[0] >= ord0 and \
+       #ord(row['RC Column 4'])[0] <= ord9) or \
+       #(ord(row['RC Column 8'])[0] >= ord0 and \
+       #ord(row['RC Column 8'])[0] <= ord9):
+           #print ("Number in row {}".format(row))
+#
+    #if row % 1000 == 0:
+        #print("Checking row {} for numbers.".format(row))
+#
+            
 # Need a count similar to act_row_cnt, but that gets incremented when a new row 
 # gets created in the new file/dataframe
 newfile_row_cnt = -1
@@ -87,20 +102,37 @@ newfile_row_cnt = -1
 
 act_row_cnt = -1
 curr_stud_row = TEMPL_START_ROW
+timerx = 0
 
 # Loop through rows, creating each as we go
-for row_cnt in range(0, 55):
+for row_cnt in range(0, 17905):
 
+    # Output the count every so often so we know where we are at.
+    if row_cnt%100 == 0:
+        print("row_cnt = {}".format(row_cnt))
+        writer = ExcelWriter('NewFile4.xlsx')
+        df_hist.to_excel(writer,'Sheet1',index=False)
+        writer.save()
+        # Output time to run 100 records
+        timerx = time.time() - timerx
+        print("time = {}".format(timerx))
+        timerx = time.time()
+            
+    #print(df_hist.head())
     act_row_cnt += 1
     
     # Don't bother with anything if there is are no grades for the student.  Go 
     # to the next row.
     acn = df_transcript['Course Name'][act_row_cnt]
     ac4 = df_transcript['RC Column 4'][act_row_cnt]
-    if (S1_OR_S2 == 1 and 
+    if ((S1_OR_S2 == 1 and 
        pd.isnull(df_transcript['RC Column 4'][act_row_cnt]) == False) or \
        (S1_OR_S2 == 2 and \
-       pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False):
+       pd.isnull(df_transcript['RC Column 8'][act_row_cnt]) == False)) and \
+       (df_transcript['Relative Year'][act_row_cnt] == 0 or \
+        df_transcript['Relative Year'][act_row_cnt] == 1 or \
+        df_transcript['Relative Year'][act_row_cnt] == 2 or \
+        df_transcript['Relative Year'][act_row_cnt] == 3):
 
         # Increment no. of rows in new file / Dataframe
         newfile_row_cnt += 1
@@ -120,12 +152,12 @@ for row_cnt in range(0, 55):
         
         # Testing - Writing to disk - REMOVE LATER
         # Add Student Number
-        df_hist['Student_Number'][curr_stud_row ] = df_transcript['Unique ID'][act_row_cnt]
+        df_hist['Student_Number'][curr_stud_row ] = df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]].iloc[0]['Bluebook ID']     #df_transcript['Unique ID'][act_row_cnt]
 
         # Add Course Number
         crs_number_temp = df_transcript['Course Number'][act_row_cnt]
         mycnt = len(df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]])
-        df_hist['Course Number'][curr_stud_row] = df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]].iloc[0]['Bluebook ID']
+        df_hist['Course Number'][curr_stud_row] = "" #df_student.loc[df_student['UNIQUE ID'] == df_transcript['Unique ID'][act_row_cnt]].iloc[0]['Bluebook ID']
 
         # Add Course Name
         tempCN = df_transcript['Course Name'][act_row_cnt]
@@ -230,7 +262,14 @@ for row_cnt in range(0, 55):
         # Percent - 95 - Get the current letter grade from 'Grade' and
         # then convert to percent using dictionary let_to_pcnt
         if pd.isnull(df_hist['Grade'][curr_stud_row]) == False:
-            df_hist['Percent'][curr_stud_row] = let_to_pcnt[df_hist['Grade'][curr_stud_row]]
+            if df_hist['Grade'][curr_stud_row] in let_to_pcnt:
+                df_hist['Percent'][curr_stud_row] = let_to_pcnt[df_hist['Grade'][curr_stud_row]]
+            else:
+                print("Dodgy grade found at curr_stud_row = {}, StudNo = {}, course = {}, course no = {}" \
+                        .format(curr_stud_row,
+                                df_hist['Student_Number'][curr_stud_row],
+                                df_hist['Course Name'][curr_stud_row],
+                                df_hist['Course Number'][curr_stud_row]))
         else:
             print("Empty grade for {}, course {}".format(df_hist['Student_Number'][curr_stud_row], df_hist['Course Number'][curr_stud_row]))
             #sys.exit()
@@ -255,7 +294,7 @@ for row_cnt in range(0, 55):
         # If grade was a pass, earned credit is the potential credit, otherwise 0.            
         # EarnedCrHrs - 0.5, 1 Problems with GPA again
         if pd.isnull(df_hist['Grade'][curr_stud_row]) == False and df_hist['Grade'][curr_stud_row] != 'F':
-            print(df_hist['PotentialCrHrs'][curr_stud_row])
+            #print(df_hist['PotentialCrHrs'][curr_stud_row])
             df_hist['EarnedCrHrs'][curr_stud_row] = df_hist['PotentialCrHrs'][curr_stud_row]
                 #df_courses.loc[df_courses['Name'] == df_transcript['Course Name'][act_row_cnt], 'CRDTS'].iloc[0]
 
@@ -263,16 +302,26 @@ for row_cnt in range(0, 55):
         # GPA Points - 4 
 
         gpa_temp = 0.0
-        if str(df_hist['Course Name'][curr_stud_row])[-2:] == HIGHER_LEVEL:
-            gpa_temp = 0.5
-        elif str(df_hist['Course Name'][curr_stud_row])[-2:] == STANDARD_LEVEL:
-            gpa_temp = 0.25
-        else:
-            gpa_temp = 0.0
+        #if str(df_hist['Course Name'][curr_stud_row])[-2:] == HIGHER_LEVEL:
+            #gpa_temp = 0.5
+        #elif str(df_hist['Course Name'][curr_stud_row])[-2:] == STANDARD_LEVEL:
+            #gpa_temp = 0.25
+        #else:
+            #gpa_temp = 0.0
+        # Add on the 0.25 or 0.5 for SL and HL courses.
+        gpa_temp += df_courses.loc[df_courses['Course Number'] == df_transcript['Course Number'][act_row_cnt]].iloc[0]['GPA']
 
         # Use the grade the student received to find the points from the grade table and 
         # then add them to the earned grade
-        gpa_temp += let_to_gpa[df_hist['Grade'][curr_stud_row]]
+
+        if df_hist['Grade'][curr_stud_row] in let_to_pcnt:
+            gpa_temp += let_to_gpa[df_hist['Grade'][curr_stud_row]]
+        else:
+            print("Dodgy grade found at curr_stud_row = {}, StudNo = {}, course = {}, course no = {}" \
+                    .format(curr_stud_row,
+                            df_hist['Student_Number'][curr_stud_row],
+                            df_hist['Course Name'][curr_stud_row],
+                            df_hist['Course Number'][curr_stud_row]))
         df_hist['GPA Points'][curr_stud_row] = gpa_temp
         # Do we need to loop again?
         if (SEC_ROW == True) or (SEC_ROW == False and TWO_ROWS == False):
